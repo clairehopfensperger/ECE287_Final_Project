@@ -7,9 +7,6 @@
 // idk where to instatiate the registers tho.
 // - claire
 
-// edit 11/14/22 claire
-// DOES NOT COMPILE RN - sorry i didn't have time to debug
-
 module move_logic(
 	input clk, rst,
 	input [3:0] move, //1 of the 9 different gridsd
@@ -34,15 +31,15 @@ module move_logic(
 	//    |    |    |    |
 	//    |----|----|----|
 	
-	parameter A1 = 4'd0,
-				 A2 = 4'd1,
-				 A3 = 4'd2,
-				 B1 = 4'd3,
-				 B2 = 4'd4,
-				 B3 = 4'd5,
-				 C1 = 4'd6,
-				 C2 = 4'd7,
-				 C3 = 4'd8;
+	parameter A1 = 4'd1,
+				 A2 = 4'd2,
+				 A3 = 4'd3,
+				 B1 = 4'd4,
+				 B2 = 4'd5,
+				 B3 = 4'd6,
+				 C1 = 4'd7,
+				 C2 = 4'd8,
+				 C3 = 4'd9;
 				 
 	reg en_A1, en_A2, en_A3,
 		 en_B1, en_B2, en_B3,
@@ -228,8 +225,9 @@ module move_logic(
 			else if (out_A3 == 2'10)
 				outcome = P1_LOSE;
 		end
+		else if (out_A1 == 2'b00 || out_A2 == 2'b00 || out_A3 == 2'b00 || out_B1 == 2'b00 || out_B2 == 2'b00 || out_B3 == 2'b00 || out_C1 == 2'b00 || out_C2 == 2'b00 || out_C3 == 2'b00)
+			outcome = IN_PROGRESS;
 		else
-			// need to check for empty squares == IN_PROGRESS
 			outcome = TIE;
 	end
 	
