@@ -2,15 +2,15 @@
 // hypothetically checked after every move.
 
 module outcome(
-	input [1:0]A1_val,
-	input [1:0]A2_val,
-	input [1:0]A3_val,
-	input [1:0]B1_val,
-	input [1:0]B2_val,
-	input [1:0]B3_val,
-	input [1:0]C1_val,
-	input [1:0]C2_val,
-	input [1:0]C3_val,
+	input [1:0]grid_A1,
+	input [1:0]grid_A2,
+	input [1:0]grid_A3,
+	input [1:0]grid_B1,
+	input [1:0]grid_B2,
+	input [1:0]grid_B3,
+	input [1:0]grid_C1,
+	input [1:0]grid_C2,
+	input [1:0]grid_C3,
 	output reg [2:0]outcome
 	);
 	
@@ -23,70 +23,70 @@ module outcome(
 	always @(*)
 	begin
 		// Horizontal A row
-		if (A1_val == A2_val && A2_val == A3_val && A3_val != 2'b00)
+		if (grid_A1 == grid_A2 && grid_A2 == grid_A3 && grid_A3 != 2'b00)
 		begin
-			if (A1_val == 2'01)
+			if (grid_A1 == 2'01)
 				outcome = P1_WIN;
-			else if (A1_val == 2'10)
+			else if (grid_A1 == 2'10)
 				outcome = P1_LOSE;
 		end
 		// Horizontal B row
-		else if (B1_val == B2_val && B2_val == B3_val && B3_val != 2'b00)
+		else if (grid_B1 == grid_B2 && grid_B2 == grid_B3 && grid_B3 != 2'b00)
 		begin
-			if (B1_val == 2'01)
+			if (grid_B1 == 2'01)
 				outcome = P1_WIN;
-			else if (B1_val == 2'10)
+			else if (grid_B1 == 2'10)
 				outcome = P1_LOSE;
 		end
 		// Horizontal C row
-		else if (C1_val == C2_val && C2_val == C3_val && C3_val != 2'b00)
+		else if (grid_C1 == grid_C2 && grid_C2 == grid_C3 && grid_C3 != 2'b00)
 		begin
-			if (C1_val == 2'01)
+			if (grid_C1 == 2'01)
 				outcome = P1_WIN;
-			else if (C1_val == 2'10)
+			else if (grid_C1 == 2'10)
 				outcome = P1_LOSE;
 		end
 		// Vertical 1 column
-		else if (A1_val == B1_val && B1_val == C1_val && C1_val != 2'b00)
+		else if (grid_A1 == grid_B1 && grid_B1 == grid_C1 && grid_C1 != 2'b00)
 		begin
-			if (A1_val == 2'01)
+			if (grid_A1 == 2'01)
 				outcome = P1_WIN;
-			else if (A1_val == 2'10)
+			else if (grid_A1 == 2'10)
 				outcome = P1_LOSE;
 		end
 		// Vertical 2 column
-		else if (A2_val == B2_val && B2_val == C2_val && C2_val != 2'b00)
+		else if (grid_A2 == grid_B2 && grid_B2 == grid_C2 && grid_C2 != 2'b00)
 		begin
-			if (A2_val == 2'01)
+			if (grid_A2 == 2'01)
 				outcome = P1_WIN;
-			else if (A2_val == 2'10)
+			else if (grid_A2 == 2'10)
 				outcome = P1_LOSE;
 		end
 		// Vertical 3 column
-		else if (A3_val == B3_val && B3_val == C3_val && C3_val != 2'b00)
+		else if (grid_A3 == grid_B3 && grid_B3 == grid_C3 && grid_C3 != 2'b00)
 		begin
-			if (A3_val == 2'01)
+			if (grid_A3 == 2'01)
 				outcome = P1_WIN;
-			else if (A3_val == 2'10)
+			else if (grid_A3 == 2'10)
 				outcome = P1_LOSE;
 		end
 		// Negative slope diagonal
-		else if (A1_val == B2_val && B2_val == C3_val && C3_val != 2'b00)
+		else if (grid_A1 == grid_B2 && grid_B2 == grid_C3 && grid_C3 != 2'b00)
 		begin
-			if (A1_val == 2'01)
+			if (grid_A1 == 2'01)
 				outcome = P1_WIN;
-			else if (A1_val == 2'10)
+			else if (grid_A1 == 2'10)
 				outcome = P1_LOSE;
 		end
 		// Positive slope diagonal
-		else if (A3_val == B2_val && B2_val == C1_val && C1_val != 2'b00)
+		else if (grid_A3 == grid_B2 && grid_B2 == grid_C1 && grid_C1 != 2'b00)
 		begin
-			if (A3_val == 2'01)
+			if (grid_A3 == 2'01)
 				outcome = P1_WIN;
-			else if (A3_val == 2'10)
+			else if (grid_A3 == 2'10)
 				outcome = P1_LOSE;
 		end
-		else if (((((((((A1_val == A2_val) == A3_val) == B1_val) == B2_val) == B3_val) == C1_val) == C2_val) == C3_val) != 2'b00)
+		else if (((((((((grid_A1 == grid_A2) == grid_A3) == grid_B1) == grid_B2) == grid_B3) == grid_C1) == grid_C2) == grid_C3) != 2'b00)
 			outcome = TIE;
 		else
 			outcome = IN_PROGRESS;
