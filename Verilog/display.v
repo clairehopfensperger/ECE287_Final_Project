@@ -26,7 +26,7 @@ module display(
 	reg [31:0]x;
 	reg [31:0]y;
 	reg [2:0]color;
-	reg back_color = 3'b111;
+	reg back_color = 3'b000;
 	
 	// Grid:
 	//       1    2    3
@@ -462,6 +462,7 @@ module display(
 			count_y <= 32'd0;
 			x <= 9'd0;
 			y <= 8'd0;
+			color <= 3'b111;
 		end
 		else
 		begin
