@@ -2,27 +2,36 @@
 
 // This module implements the FSM that works the turn system
 
-module game_logic(clk, rst, move, outcome);
-	input clk, rst;
-	input [3:0]move; //9 grid squares
-	output reg [1:0]outcome; //in_progress, win, lose, tie
+module game_logic(
+	input clk, rst,
+	input [3:0]move, //9 grid squares
+	input start,
+	input check,
+	input valid,
+	input [2:0]outcome,
+	output reg clear,
+	output reg [1:0]user,
+	output reg [2:0] A1_color, 
+	output reg [2:0] A2_color,
+	output reg [2:0] A3_color,
+	output reg [2:0] B1_color, 
+	output reg [2:0] B2_color,
+	output reg [2:0] B3_color, 
+	output reg [2:0] C1_color, 
+	output reg [2:0] C2_color, 
+	output reg [2:0] C3_color
+	);
 	
-	// Grid:
-	//       1    2    3
-	//    |----|----|----|
-	//    |    |    |    |
-	//  A | A1 | A2 | A3 |
-	//    |    |    |    |
-	//    -----|----|-----
-	//    |    |    |    |
-	//  B | B1 | B2 | B3 |
-	//    |    |    |    |
-	//    -----|----|-----
-	//    |    |    |    |
-	//  C | C1 | C2 | C3 |
-	//    |    |    |    |
-	//    |----|----|----|
-	
+	//reg [1:0]turn;
+	parameter in_progress = 2'd0,
+				 p1_win = 2'd1,
+				 p1_lose = 2'd2,
+				 tie = 2'd3;
+	parameter
+				 P1_color = 3'b010,
+	          P2_color = 3'b101,
+	          default_color = 3'b111;
+				 
 	parameter A1 = 4'd1,
 				 A2 = 4'd2,
 				 A3 = 4'd3,
@@ -33,19 +42,20 @@ module game_logic(clk, rst, move, outcome);
 				 C2 = 4'd8,
 				 C3 = 4'd9;
 	
-	reg [1:0]turn;
-	reg end_game;
+	reg [3:0]S;
+	reg [3:0]NS;
 	
-	move_logic my_move_logic(clk, rst, move, user, valid, outcome);
-	
-	reg [2:0]S;
-	reg [2:0]NS;
-	parameter START = 3'd0,
-				 USER_1 = 3'd1,
-				 USER_2 = 3'd2,
-				 CHECK = 3'd3, 
-				 END = 3'd4,
-				 ERROR = 3'hF;
+	parameter START = 4'd0,
+				 P1 = 4'd1,
+				 UPDATE1 = 4'd2,
+				 SET1 = 4'd8,
+				 CHECK1 = 4'd3,
+				 P2 = 4'd4,
+				 UPDATE2 = 4'd5,
+				 SET2 = 4'd9,
+				 CHECK2 = 4'd6,
+				 END = 4'd7,
+				 ERROR = 4'hF;
 				 
 	always @(posedge clk or negedge rst)
 	begin
@@ -58,37 +68,29 @@ module game_logic(clk, rst, move, outcome);
 	always @(*)
 	begin
 		case(S)
-			START:
-			begin
-				if (turn == 2'b01)
-					NS = USER_1;
-				else
-					NS = START;
-			end
-			USER_1:
-			begin
-				if (turn == 2'b00)
-					NS = CHECK;
-				else
-					NS = USER_1;
-			end
-			USER_2:
-			begin
-				if (turn == 2'b00)
-					NS = CHECK_2;
-				else
-					NS = USER_2;
-			CHECK:
-			begin
-				if (end_game == 1'b0 && turn == 2'b01)
-					NS = USER_1;
-				else if (end_game == 1'b0 && turn == 2'b10)
-					NS = USER_2;
-				else if (end_game == 1'b1)
-					NS = END;
-				else
-					NS = CHECK;
-			end
+			START: begin 
+				if (start == 1'b0) NS = START;
+				else NS = P1; end
+			P1: begin
+				if (check == 1'b1) NS = UPDATE1;
+				else NS = P1; end
+			UPDATE1: begin 
+				if (valid == 1'b1) NS = SET1;
+				else NS = P1; end
+			SET1: NS = CHECK1;
+			CHECK1: begin
+				if (outcome == in_progress) NS = P2;
+				else NS = END; end
+			P2: begin 
+				if (check == 1'b1) NS = UPDATE2;
+				else NS = P2; end
+			UPDATE2: begin 
+				if (valid == 1'b1) NS = SET2;
+				else NS = P2; end
+			SET2: NS = CHECK2;
+			CHECK2: begin
+				if (outcome == in_progress) NS = P1;
+				else NS = END; end
 			END: NS = END;
 			default: NS = ERROR;
 		endcase
@@ -98,30 +100,77 @@ module game_logic(clk, rst, move, outcome);
 	begin
 		if (rst == 1'b0)
 		begin
-			turn <= 2'b01;
+			//clear <= 1'b1; // might not need 
+			A1_color <= default_color;
+			A2_color <= default_color;
+			A3_color <= default_color;
+			B1_color <= default_color;
+			B2_color <= default_color;
+			B3_color <= default_color;
+			C1_color <= default_color;
+			C2_color <= default_color;
+			C3_color <= default_color;
 		end
 		else
 		begin
-			case (S)
-				START:
-				begin
-				end
-				USER_1:
-				begin
-				end
-				USER_2:
-				begin
-				end
-				CHECK:
-				begin
-				end
-				END:
-				begin
-				end
-				default:
-				begin
-				end
-			endcase
+		case(S)
+			START: 
+			begin 
+				A1_color <= default_color;
+				A2_color <= default_color;
+				A3_color <= default_color;
+				B1_color <= default_color;
+				B2_color <= default_color;
+				B3_color <= default_color;
+				C1_color <= default_color;
+				C2_color <= default_color;
+				C3_color <= default_color; 
+			end
+			P1: user <= 2'b01;
+			SET1: 
+			begin
+				if (move == A1)
+					A1_color <= P1_color;
+				if (move == A2)
+					A2_color <= P1_color;
+				if (move == A3)
+					A3_color <= P1_color;
+				if (move == B1)
+					B1_color <= P1_color;
+				if (move == B2)
+					B2_color <= P1_color;
+				if (move == B3)
+					B3_color <= P1_color;
+				if (move == C1)
+					C1_color <= P1_color;
+				if (move == C2)
+					C2_color <= P1_color;
+				if (move == C3)
+					C3_color <= P1_color;
+			end
+			P2: user <= 2'b10;
+			SET2: 
+			begin
+				if (move == A1)
+					A1_color <= P2_color;
+				if (move == A2)
+					A2_color <= P2_color;
+				if (move == A3)
+					A3_color <= P2_color;
+				if (move == B1)
+					B1_color <= P2_color;
+				if (move == B2)
+					B2_color <= P2_color;
+				if (move == B3)
+					B3_color <= P2_color;
+				if (move == C1)
+					C1_color <= P2_color;
+				if (move == C2)
+					C2_color <= P2_color;
+				if (move == C3)
+					C3_color <= P2_color;
+			end
+		endcase
 		end
 	end
 
