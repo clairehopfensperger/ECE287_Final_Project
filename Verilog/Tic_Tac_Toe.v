@@ -6,10 +6,12 @@ module Tic_Tac_Toe(
 	
 	input mode, // player v player, player v AI
 	//input level, // level of difficulty of AI
-	input [1:0]player,
+	//input [1:0]player,
 	input [3:0]move, //9 grid squares
-	output valid,
-	output [2:0]outcome, //in_progress, win, lose, tie
+	input check,
+	input start,
+	output wire valid,
+	output wire [2:0]outcome, //in_progress, win, lose, tie
 	
 	// VGA outputs
 	output [9:0]VGA_R,
@@ -53,24 +55,31 @@ module Tic_Tac_Toe(
 	parameter P1 = 2'b01,
 				 P2 = 2'b10;
 	
-	// different color options for grid squares
-	parameter
-	P1_color = 3'b010,
-	P2_color = 3'b101,
-	default_color = 3'b111;
+//	// different color options for grid squares
+//	parameter
+//	P1_color = 3'b010,
+//	P2_color = 3'b101,
+//	default_color = 3'b111;
 	
-	// registers holding colors for each of grid squares
-	reg [2:0] A1_color = P1_color;
-	reg [2:0] A2_color = default_color;
-	reg [2:0] A3_color = default_color;
-	reg [2:0] B1_color = default_color;
-	reg [2:0] B2_color = P2_color;
-	reg [2:0] B3_color = default_color;
-	reg [2:0] C1_color = default_color;
-	reg [2:0] C2_color = default_color;
-	reg [2:0] C3_color = default_color;
+//	// registers holding colors for each of grid squares
+//	reg [2:0] A1_color = P1_color;
+//	reg [2:0] A2_color = default_color;
+//	reg [2:0] A3_color = default_color;
+//	reg [2:0] B1_color = default_color;
+//	reg [2:0] B2_color = P2_color;
+//	reg [2:0] B3_color = default_color;
+//	reg [2:0] C1_color = default_color;
+//	reg [2:0] C2_color = default_color;
+//	reg [2:0] C3_color = default_color;
 
 	// instantiating modules
+	// wire valid;
+	// wire [2:0]outcome;
+	wire [1:0]grid_A1, grid_A2, grid_A3, grid_B1, grid_B2, grid_B3, grid_C1, grid_C2, grid_C3;
+	wire [2:0]A1_color, A2_color, A3_color, B1_color, B2_color, B3_color, C1_color, C2_color, C3_color;
+	wire [1:0]user;
+	
+	game_logic my_logic(clk, rst, move, start, check, valid, outcome, clear, user, A1_color, A2_color, A3_color, B1_color, B2_color, B3_color, C1_color, C2_color, C3_color);
 	
 	grid my_grid(clk, rst, clear, user, move, grid_A1, grid_A2, grid_A3, grid_B1, grid_B2, grid_B3, grid_C1, grid_C2, grid_C3, valid);
 	
