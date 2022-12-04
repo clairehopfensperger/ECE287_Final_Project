@@ -11,22 +11,22 @@ module game_logic(
 	input [2:0]outcome,
 	output reg clear,
 	output reg [1:0]user,
-	output reg [2:0] A1_color, 
-	output reg [2:0] A2_color,
-	output reg [2:0] A3_color,
-	output reg [2:0] B1_color, 
-	output reg [2:0] B2_color,
-	output reg [2:0] B3_color, 
-	output reg [2:0] C1_color, 
-	output reg [2:0] C2_color, 
-	output reg [2:0] C3_color
+	output reg [2:0]A1_color, 
+	output reg [2:0]A2_color,
+	output reg [2:0]A3_color,
+	output reg [2:0]B1_color, 
+	output reg [2:0]B2_color,
+	output reg [2:0]B3_color, 
+	output reg [2:0]C1_color, 
+	output reg [2:0]C2_color, 
+	output reg [2:0]C3_color
 	);
 	
 	//reg [1:0]turn;
-	parameter in_progress = 2'd0,
-				 p1_win = 2'd1,
-				 p1_lose = 2'd2,
-				 tie = 2'd3;
+	parameter in_progress = 3'd0,
+				 p1_win = 3'd1,
+				 p1_lose = 3'd2,
+				 tie = 3'd3;
 	parameter
 				 P1_color = 3'b010,
 	          P2_color = 3'b101,
@@ -48,13 +48,13 @@ module game_logic(
 	parameter START = 4'd0,
 				 P1 = 4'd1,
 				 UPDATE1 = 4'd2,
-				 SET1 = 4'd8,
-				 CHECK1 = 4'd3,
-				 P2 = 4'd4,
-				 UPDATE2 = 4'd5,
-				 SET2 = 4'd9,
-				 CHECK2 = 4'd6,
-				 END = 4'd7,
+				 SET1 = 4'd3,
+				 CHECK1 = 4'd4,
+				 P2 = 4'd5,
+				 UPDATE2 = 4'd6,
+				 SET2 = 4'd7,
+				 CHECK2 = 4'd8,
+				 END = 4'd9,
 				 ERROR = 4'hF;
 				 
 	always @(posedge clk or negedge rst)
@@ -68,29 +68,57 @@ module game_logic(
 	always @(*)
 	begin
 		case(S)
-			START: begin 
-				if (start == 1'b0) NS = START;
-				else NS = P1; end
-			P1: begin
-				if (check == 1'b1) NS = UPDATE1;
-				else NS = P1; end
-			UPDATE1: begin 
-				if (valid == 1'b1) NS = SET1;
-				else NS = P1; end
+			START: 
+			begin 
+				if (start == 1'b0) 
+					NS = START;
+				else 
+					NS = P1; 
+			end
+			P1: 
+			begin
+				if (check == 1'b1) 
+					NS = UPDATE1;
+				else 
+					NS = P1; 
+			end
+			UPDATE1: 
+			begin 
+				if (valid == 1'b1) 
+					NS = SET1;
+				else 
+					NS = P1; 
+			end
 			SET1: NS = CHECK1;
-			CHECK1: begin
-				if (outcome == in_progress) NS = P2;
-				else NS = END; end
-			P2: begin 
-				if (check == 1'b1) NS = UPDATE2;
-				else NS = P2; end
-			UPDATE2: begin 
-				if (valid == 1'b1) NS = SET2;
-				else NS = P2; end
+			CHECK1: 
+			begin
+				if (outcome == in_progress) 
+					NS = P2;
+				else 
+					NS = END; 
+			end
+			P2: 
+			begin 
+				if (check == 1'b1) 
+					NS = UPDATE2;
+				else 
+					NS = P2; 
+			end
+			UPDATE2: 
+			begin 
+				if (valid == 1'b1) 
+					NS = SET2;
+				else 
+					NS = P2; 
+			end
 			SET2: NS = CHECK2;
-			CHECK2: begin
-				if (outcome == in_progress) NS = P1;
-				else NS = END; end
+			CHECK2: 
+			begin
+				if (outcome == in_progress) 
+					NS = P1;
+				else 
+					NS = END; 
+			end
 			END: NS = END;
 			default: NS = ERROR;
 		endcase
@@ -126,7 +154,12 @@ module game_logic(
 				C2_color <= default_color;
 				C3_color <= default_color; 
 			end
-			P1: user <= 2'b01;
+			P1: 
+			begin
+				user <= 2'b01;
+				A1_color <= 3'b110; // tester line -> code does reach here
+			end
+			UPDATE1: A2_color <= 3'b011; // tester line -> code does reach here
 			SET1: 
 			begin
 				if (move == A1)
