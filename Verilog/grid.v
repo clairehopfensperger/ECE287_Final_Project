@@ -1,11 +1,12 @@
 // this module takes care of putting values in the grid squares
+// might want to split this method up into two: determine validity and place values in grids
 
 module grid(
 	input clk, rst,
 	input clear,
-	input [1:0] user,
-	input [3:0] move,
-	output reg [1:0] grid_A1, grid_A2, grid_A3, grid_B1, grid_B2, grid_B3, grid_C1, grid_C2, grid_C3,
+	input [1:0]user,
+	input [3:0]move,
+	output reg [1:0]grid_A1, grid_A2, grid_A3, grid_B1, grid_B2, grid_B3, grid_C1, grid_C2, grid_C3,
 	output reg valid
 	);
 	
@@ -35,11 +36,11 @@ module grid(
 				 C2 = 4'd8,
 				 C3 = 4'd9;
 	
-	always @(posedge clk)
+	always @(posedge clk or negedge rst)
 	begin
 		
 		// Clear board
-		if (clear == 1'b1)
+		if (rst == 1'b0)
 		begin
 			grid_A1 <= 2'd0;
 			grid_A2 <= 2'd0;
