@@ -20,13 +20,13 @@ module display(
 	output VGA_CLK
 	);
 	
-	vga_adapter my_vga(rst, clk, color, x, y, plot, VGA_R, VGA_G, VGA_B, VGA_HS, VGA_VS, VGA_BLANK, VGA_SYNC, VGA_CLK);
-	
 	reg plot = 1'b1; 
 	reg [31:0]x;
 	reg [31:0]y;
 	reg [2:0]color;
 	reg back_color = 3'b000;
+	
+	vga_adapter my_vga(rst, clk, color, x, y, plot, VGA_R, VGA_G, VGA_B, VGA_HS, VGA_VS, VGA_BLANK, VGA_SYNC, VGA_CLK);
 	
 	// Grid:
 	//       1    2    3
@@ -446,7 +446,9 @@ module display(
 			C3_UPDATE_Y: NS = C3_CHECK_Y;
 			C3_UPDATE_X: NS = C3_CHECK_X;
 			C3_DRAW: NS = C3_UPDATE_X;
-			C3_END: NS = C3_END;
+			C3_END: NS = BACK_START; // looping back to first state -> noticably refreshes whole screen at 50Hz
+				// will need to create wait state to determine which blocks to refresh and when 
+				// UGH FML
 			
 			default: NS = ERROR;
 			
