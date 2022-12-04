@@ -4,14 +4,14 @@ module Tic_Tac_Toe(
 	input clk, 
 	input rst,
 	
-	input mode, // player v player, player v AI
+	//input mode, // player v player, player v AI
 	//input level, // level of difficulty of AI
 	//input [1:0]player,
 	input [3:0]move, //9 grid squares
 	input check,
 	input start,
-	output wire valid,
-	output wire [2:0]outcome, //in_progress, win, lose, tie
+	//output wire valid,
+	//output wire [2:0]outcome, //in_progress, win, lose, tie
 	
 	// VGA outputs
 	output [9:0]VGA_R,
@@ -51,30 +51,20 @@ module Tic_Tac_Toe(
 				 C2 = 4'd8,
 				 C3 = 4'd9;
 				 
-	// player
-	parameter P1 = 2'b01,
-				 P2 = 2'b10;
-	
-//	// different color options for grid squares
-//	parameter
-//	P1_color = 3'b010,
-//	P2_color = 3'b101,
-//	default_color = 3'b111;
-	
-//	// registers holding colors for each of grid squares
-//	reg [2:0] A1_color = P1_color;
-//	reg [2:0] A2_color = default_color;
-//	reg [2:0] A3_color = default_color;
-//	reg [2:0] B1_color = default_color;
-//	reg [2:0] B2_color = P2_color;
-//	reg [2:0] B3_color = default_color;
-//	reg [2:0] C1_color = default_color;
-//	reg [2:0] C2_color = default_color;
-//	reg [2:0] C3_color = default_color;
+	// i have a bad feeling that our grid method doesn't hold values for each grid. we may need to make registers.
+//	reg grid_A1;
+//	reg grid_A2;
+//	reg grid_A3;
+//	reg grid_B1;
+//	reg grid_B2;
+//	reg grid_B3;
+//	reg grid_C1;
+//	reg grid_C2;
+//	reg grid_C3;
 
 	// instantiating modules
-	// wire valid;
-	// wire [2:0]outcome;
+	wire valid;
+	wire [2:0]outcome;
 	wire [1:0]grid_A1, grid_A2, grid_A3, grid_B1, grid_B2, grid_B3, grid_C1, grid_C2, grid_C3;
 	wire [2:0]A1_color, A2_color, A3_color, B1_color, B2_color, B3_color, C1_color, C2_color, C3_color;
 	wire [1:0]user;
