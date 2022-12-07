@@ -121,7 +121,10 @@ module Tic_Tac_Toe(
 	wire [8:0]AI_move;
 	reg [3:0]move_count;
 	
-	AI my_AI(clk, rst, grid_A1, grid_A2, grid_A3, grid_B1, grid_B2, grid_B3, grid_C1, grid_C2, grid_C3, AI_en, mode, move_count, AI_move);
+	// implementing AI for computer turn
+	AI_decide my_AI(grid_A1, grid_A2, grid_A3, grid_B1, grid_B2, grid_B3, grid_C1, grid_C2, grid_C3, AI_en, mode, AI_move);
+	
+	//AI my_AI(clk, rst, grid_A1, grid_A2, grid_A3, grid_B1, grid_B2, grid_B3, grid_C1, grid_C2, grid_C3, AI_en, mode, move_count, AI_move);
 	
 	reg [7:0]S;
 	reg [7:0]NS;
