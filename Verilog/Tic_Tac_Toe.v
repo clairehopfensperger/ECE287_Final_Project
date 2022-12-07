@@ -35,8 +35,13 @@ module Tic_Tac_Toe(
 	output reg AI_test,
 	output reg [8:0]move_out,
 	output reg en_test,
+	output reg [8:0]p2_move,
 	
-	output reg [8:0]p2_move
+	// seven segment outputs
+	output [6:0]seg7_lsb,
+	output [6:0]seg7_msb,
+	output [6:0]seg7_hund,
+	output [6:0]seg7_thous
 	);
 	
 	// variables used for vga
@@ -109,6 +114,9 @@ module Tic_Tac_Toe(
 	parameter p1_color = 3'b010,
 	          p2_color = 3'b101,
 	          default_color = 3'b111;
+				 
+	// seven segment instantiation
+	four_val_display disp_four(user, seg7_lsb, seg7_msb, seg7_hund, seg7_thous);
 				 
 	wire [8:0]AI_move;
 	reg [3:0]move_count;
@@ -1879,7 +1887,10 @@ module Tic_Tac_Toe(
 					
 					// non win cases
 					else if ((grid_A1[0]||grid_A1[1])&&(grid_A2[0]||grid_A2[1])&&(grid_A3[0]||grid_A3[1])&&(grid_B1[0]||grid_B1[1])&&(grid_B2[0]||grid_B2[1])&&(grid_B3[0]||grid_B3[1])&&(grid_C1[0]||grid_C1[1])&&(grid_C2[0]||grid_C2[1])&&(grid_C3[0]||grid_C3[1]))
+					begin
 						outcome <= tie;
+						user <= default_player; // added to change display to 0 if tie
+					end
 					else
 						outcome <= in_progress;
 				
