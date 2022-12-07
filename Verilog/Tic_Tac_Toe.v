@@ -3,17 +3,12 @@
 module Tic_Tac_Toe(
 	input clk, 
 	input rst,
-	
 	input [8:0]move, //9 grid squares
-	//input check,
-	//input start,
-	input AI_en, // 0 = player1 v player2, 1 = player1 v AI
-	input mode, // level of difficulty of AI
-	output reg valid,
-	output reg [2:0]outcome, //in_progress, win, lose, tie
+	input AI_en, // 0 = player1 v. player2, 1 = player1 v. AI
+	input mode, // level of difficulty of AI: 0 = easy, 1 = hard
 	
 	// grid values
-	output reg [1:0]grid_A1, grid_A2, grid_A3, grid_B1, grid_B2, grid_B3, grid_C1, grid_C2, grid_C3,
+	output reg [1:0]grid_A1, grid_A2, grid_A3, grid_B1, grid_B2, grid_B3, grid_C1, grid_C2, grid_C3, 
 	
 	// VGA outputs
 	output [9:0]VGA_R,
@@ -24,18 +19,6 @@ module Tic_Tac_Toe(
 	output VGA_BLANK,
 	output VGA_SYNC,
 	output VGA_CLK,
-	
-	// seven segment
-	output [6:0]seg7_dig0,
-	output [6:0]seg7_dig1,
-	
-	// tester outputs
-	output reg p1_test,
-	output reg p2_test,
-	output reg AI_test,
-	output reg [8:0]move_out,
-	output reg en_test,
-	output reg [8:0]p2_move,
 	
 	// seven segment outputs
 	output [6:0]seg7_lsb,
@@ -84,20 +67,15 @@ module Tic_Tac_Toe(
 				 C2 = 9'b000000010,
 				 C3 = 9'b000000001;
 				 
-	// instantiating modules
-	//reg valid;
-	//reg [2:0]outcome;
-	//reg [1:0]grid_A1, grid_A2, grid_A3, grid_B1, grid_B2, grid_B3, grid_C1, grid_C2, grid_C3;
-	reg [2:0]A1_color, A2_color, A3_color, B1_color, B2_color, B3_color, C1_color, C2_color, C3_color;
+	// variables to be used
+	reg valid;
 	reg [1:0]user;
-	
-	// constant on variables, can remove checks with these
-	reg start;
-	reg check;
+	reg [2:0]outcome;
+	reg [2:0]A1_color, A2_color, A3_color, B1_color, B2_color, B3_color, C1_color, C2_color, C3_color;
 	
 	// user moves
 	reg [8:0]p1_move;
-	//reg [8:0]p2_move;
+	reg [8:0]p2_move;
 	
 	// outcome parameters
 	parameter in_progress = 3'd0,
@@ -117,18 +95,18 @@ module Tic_Tac_Toe(
 				 
 	// seven segment instantiation
 	four_val_display disp_four(user, seg7_lsb, seg7_msb, seg7_hund, seg7_thous);
-				 
+			
+	// variables used for AI implementation
 	wire [8:0]AI_move;
-	reg [3:0]move_count;
 	
 	// implementing AI for computer turn
 	AI_decide my_AI(grid_A1, grid_A2, grid_A3, grid_B1, grid_B2, grid_B3, grid_C1, grid_C2, grid_C3, AI_en, mode, AI_move);
 	
-	//AI my_AI(clk, rst, grid_A1, grid_A2, grid_A3, grid_B1, grid_B2, grid_B3, grid_C1, grid_C2, grid_C3, AI_en, mode, move_count, AI_move);
-	
+	// state variables for FSM
 	reg [7:0]S;
 	reg [7:0]NS;
 	
+	// state parameters
 	parameter 
 		INIT = 8'd70,
 		
@@ -315,9 +293,7 @@ module Tic_Tac_Toe(
 		DETERMINE_OUTCOME = 8'd144,
 		P2 = 8'd140,
 		GET_MOVE_AI = 8'd146,
-		AI_WAIT = 8'd154,
 		GET_MOVE_P2 = 8'd141,
-		//DISPLAY_OUTCOME = 8'd142, // add after game is functioning
 		END = 8'd143,
 		
 		// display win
@@ -330,7 +306,8 @@ module Tic_Tac_Toe(
 		WIN_END = 8'd153,
 		
 		ERROR = 8'hF;
-				 
+			
+	// changing states on clk tick		
 	always @(posedge clk or negedge rst)
 	begin
 		if (rst == 1'b0)
@@ -339,10 +316,9 @@ module Tic_Tac_Toe(
 			S <= NS;
 	end
 	
+	// state travel chart
 	always @(*)
 	begin
-		move_out = move; // tester
-		en_test = AI_en;
 	
 		case(S)
 			INIT: NS = BACK_START;
@@ -636,21 +612,9 @@ module Tic_Tac_Toe(
 			C3_DRAW: NS = C3_UPDATE_X;
 			C3_END: NS = START;
 			
-			START: 
-			begin
-				if (start == 1'b1)
-					NS = P1;
-				else
-					NS = START;
-			end
+			START: NS = P1;
 			P1: NS = GET_MOVE_P1;
-			GET_MOVE_P1: 
-			begin
-				if (check == 1'b1)
-					NS = CHECK_VALIDITY;
-				else
-					NS = GET_MOVE_P1;
-			end
+			GET_MOVE_P1: NS = CHECK_VALIDITY;
 			CHECK_VALIDITY:
 			begin
 				if (valid == 1'b0)
@@ -966,7 +930,6 @@ module Tic_Tac_Toe(
 				else if ((outcome == in_progress) && (user == player2))
 					NS = P1;
 				else if (outcome != in_progress)
-					//NS = DISPLAY_OUTCOME;
 					NS = END;
 				else
 					NS = CHECK_OUTCOME;
@@ -978,21 +941,8 @@ module Tic_Tac_Toe(
 				else
 					NS = GET_MOVE_P2;
 			end
-			GET_MOVE_AI: NS = AI_WAIT;
-			AI_WAIT: // added wait state - test
-			begin
-				if (check == 1'b1)
-					NS = CHECK_VALIDITY;
-				else
-					NS = GET_MOVE_AI;
-			end
-			GET_MOVE_P2:
-			begin
-				if (check == 1'b1)
-					NS = CHECK_VALIDITY;
-				else
-					NS = GET_MOVE_P2;
-			end
+			GET_MOVE_AI: NS = CHECK_VALIDITY;
+			GET_MOVE_P2: NS = CHECK_VALIDITY;
 			END: NS = WIN_START;
 			
 			// display winner
@@ -1032,11 +982,10 @@ module Tic_Tac_Toe(
 	begin
 		if (rst == 1'b0)
 		begin
+			// initializing variables
 			valid <= 1'b0;
 			user <= default_player;
 			outcome <= in_progress;
-			start <= 1'b1;
-			check <= 1'b1;
 		
 			// default colors for board
 			A1_color <= default_color;
@@ -1067,9 +1016,9 @@ module Tic_Tac_Toe(
 			y <= 8'd0;
 			color <= 3'b111;
 			
+			// player moves
 			p1_move <= 2'd0;
 			p2_move <= 2'd0;
-			move_count <= 4'd0;
 			
 		end
 		else
@@ -1077,6 +1026,11 @@ module Tic_Tac_Toe(
 			case(S)
 				INIT:
 				begin
+					// initializing variables
+					valid <= 1'b0;
+					user <= default_player;
+					outcome <= in_progress;
+				
 					// default colors for board
 					A1_color <= default_color;
 					A2_color <= default_color;
@@ -1099,10 +1053,16 @@ module Tic_Tac_Toe(
 					grid_C2 <= default_player;
 					grid_C3 <= default_player;
 					
-					//testers
-					p1_test <= 1'b0;
-					p2_test <= 1'b0;
-					AI_test <= 1'b0;
+					// vga variables
+					count_x <= 32'd0;
+					count_y <= 32'd0;
+					x <= 9'd0;
+					y <= 8'd0;
+					color <= 3'b111;
+					
+					// player moves
+					p1_move <= 2'd0;
+					p2_move <= 2'd0;
 				end
 				
 				// background
@@ -1340,15 +1300,9 @@ module Tic_Tac_Toe(
 				begin
 					p1_move <= move;
 					p2_move <= 9'd0;
-					p1_test <= 1'b1;
-					
 				end
 				CHECK_VALIDITY:
 				begin
-				
-					p1_test <= 1'b0;
-					p2_test <= 1'b0;
-					AI_test <= 1'b0;
 					
 					// A1
 					if ((p1_move == A1 || p2_move == A1) && (grid_A1 == default_player))
@@ -1484,7 +1438,6 @@ module Tic_Tac_Toe(
 				begin
 					p1_move <= 2'd0;
 					p2_move <= 2'd0;
-					move_count <= move_count + 4'd1;
 					
 					// A1
 					if (grid_A1 == player1)
@@ -1908,13 +1861,11 @@ module Tic_Tac_Toe(
 				begin
 					p2_move <= AI_move;
 					p1_move <= 9'd0;
-					AI_test <= 1'b1;
 				end
 				GET_MOVE_P2:
 				begin
 					p2_move <= move;
 					p1_move <= 9'd0;
-					p2_test <= 1'b1;
 				end
 				END:
 				begin
