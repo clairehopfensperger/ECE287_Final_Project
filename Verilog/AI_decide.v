@@ -1,5 +1,4 @@
 module AI_decide(
-	//input clk, rst,
 	input [1:0]grid_A1, grid_A2, grid_A3, grid_B1, grid_B2, grid_B3, grid_C1, grid_C2, grid_C3,
 	input AI_en,
 	input mode,
@@ -52,7 +51,7 @@ module AI_decide(
 		if (mode == 1'b1)
 		begin
 		
-			// 1. next win - DONE
+			// 1. next win
 				
 				// win cases in A row
 				if ((grid_A1 == 2'b10) && (grid_A2 == 2'b10) && (grid_A3 == 2'd0))
@@ -119,7 +118,7 @@ module AI_decide(
 					AI_move = A1;
 			
 			
-			// 2. block opponent win - DONE
+			// 2. block opponent win
 			
 				// lose cases in A row
 				else if ((grid_A1 == 2'b01) && (grid_A2 == 2'b01) && (grid_A3 == 2'd0))
@@ -186,7 +185,7 @@ module AI_decide(
 					AI_move = A1;
 			
 			
-			// 3. fork - DONE
+			// 3. fork
 			
 				// fork 1 - 8 variations
 				else if ((grid_B2 == 2'b10) && (grid_C3 == 2'b10) && (grid_B3 == 2'd0) && (grid_C1 == 2'd0) && (grid_A3 == 2'd0))
@@ -282,7 +281,7 @@ module AI_decide(
 					AI_move = A1;
 					
 			
-			// 4. block opponent fork - DONE
+			// 4. block opponent fork
 			
 				// fork 1 - 8 variations
 				else if ((grid_B2 == 2'b01) && (grid_C3 == 2'b01) && (grid_B3 == 2'd0) && (grid_C1 == 2'd0) && (grid_A3 == 2'd0))
@@ -378,12 +377,12 @@ module AI_decide(
 					AI_move = A1;
 					
 			
-			// 5. play center - DONE
+			// 5. play center
 				else if (grid_B2 == 2'd0)
 					AI_move = B2;
 			
 			
-			// 6. play opposite corner - DONE
+			// 6. play opposite corner
 
 				else if ((grid_A1 == 2'b01) && (grid_C3 == 2'd0))
 					AI_move = C3;
@@ -395,7 +394,7 @@ module AI_decide(
 					AI_move = A1;
 
 			
-			// 7. empty corner - DONE
+			// 7. empty corner
 
 				else if (grid_A1 == 2'd0)
 					AI_move = A1;
@@ -407,7 +406,7 @@ module AI_decide(
 					AI_move = C3;
 					
 			
-			// 8. empty side - DONE
+			// 8. empty side
 
 				else if (grid_A2 == 2'd0)
 					AI_move = A2;
