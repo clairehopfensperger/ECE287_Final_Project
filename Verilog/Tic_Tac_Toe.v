@@ -4,16 +4,15 @@ module Tic_Tac_Toe(
 	input clk, 
 	input rst,
 	
-	//input mode, // player v player, player v AI
-	//input level, // level of difficulty of AI
-	//input [1:0]player,
 	input [8:0]move, //9 grid squares
-	input check,
-	input start,
+	//input check,
+	//input start,
+	input AI_en, // 0 = player1 v player2, 1 = player1 v AI
+	input mode, // level of difficulty of AI
 	output reg valid,
-	output reg [2:0]outcome,
-	//output wire [2:0]outcome, //in_progress, win, lose, tie
+	output reg [2:0]outcome, //in_progress, win, lose, tie
 	
+	// grid values
 	output reg [1:0]grid_A1, grid_A2, grid_A3, grid_B1, grid_B2, grid_B3, grid_C1, grid_C2, grid_C3,
 	
 	// VGA outputs
@@ -26,10 +25,18 @@ module Tic_Tac_Toe(
 	output VGA_SYNC,
 	output VGA_CLK,
 	
+	// seven segment
+	output [6:0]seg7_dig0,
+	output [6:0]seg7_dig1,
+	
 	// tester outputs
 	output reg p1_test,
 	output reg p2_test,
-	output reg [8:0]move_out
+	output reg AI_test,
+	output reg [8:0]move_out,
+	output reg en_test,
+	
+	output reg [8:0]p2_move
 	);
 	
 	// variables used for vga
@@ -79,9 +86,13 @@ module Tic_Tac_Toe(
 	reg [2:0]A1_color, A2_color, A3_color, B1_color, B2_color, B3_color, C1_color, C2_color, C3_color;
 	reg [1:0]user;
 	
+	// constant on variables, can remove checks with these
+	reg start;
+	reg check;
+	
 	// user moves
 	reg [8:0]p1_move;
-	reg [8:0]p2_move;
+	//reg [8:0]p2_move;
 	
 	// outcome parameters
 	parameter in_progress = 3'd0,
@@ -98,6 +109,11 @@ module Tic_Tac_Toe(
 	parameter p1_color = 3'b010,
 	          p2_color = 3'b101,
 	          default_color = 3'b111;
+				 
+	wire [8:0]AI_move;
+	reg [3:0]move_count;
+	
+	AI my_AI(clk, rst, grid_A1, grid_A2, grid_A3, grid_B1, grid_B2, grid_B3, grid_C1, grid_C2, grid_C3, AI_en, mode, move_count, AI_move);
 	
 	reg [7:0]S;
 	reg [7:0]NS;
@@ -287,9 +303,20 @@ module Tic_Tac_Toe(
 		CHECK_OUTCOME = 8'd139,
 		DETERMINE_OUTCOME = 8'd144,
 		P2 = 8'd140,
+		GET_MOVE_AI = 8'd146,
+		AI_WAIT = 8'd154,
 		GET_MOVE_P2 = 8'd141,
 		//DISPLAY_OUTCOME = 8'd142, // add after game is functioning
 		END = 8'd143,
+		
+		// display win
+		WIN_START = 8'd147,
+		WIN_CHECK_Y = 8'd148,
+		WIN_CHECK_X = 8'd149,
+		WIN_UPDATE_Y = 8'd150,
+		WIN_UPDATE_X = 8'd151,
+		WIN_DRAW = 8'd152,
+		WIN_END = 8'd153,
 		
 		ERROR = 8'hF;
 				 
@@ -304,6 +331,7 @@ module Tic_Tac_Toe(
 	always @(*)
 	begin
 		move_out = move; // tester
+		en_test = AI_en;
 	
 		case(S)
 			INIT: NS = BACK_START;
@@ -618,7 +646,9 @@ module Tic_Tac_Toe(
 				begin
 					if (user == player1)
 						NS = GET_MOVE_P1;
-					else if (user == player2)
+					else if ((user == player2) && (AI_en == 1'b1))
+						NS = GET_MOVE_AI;
+					else if ((user == player2) && (AI_en == 1'b0))
 						NS = GET_MOVE_P2;
 				end
 				else
@@ -649,8 +679,10 @@ module Tic_Tac_Toe(
 				begin
 					if (user == player1)
 						NS = GET_MOVE_P1;
-					else if (user == player2)
+					else if ((user == player2) && (AI_en == 1'b0))
 						NS = GET_MOVE_P2; 
+					else if ((user == player2) && (AI_en == 1'b1))
+						NS = GET_MOVE_AI;
 				end
 			end
 					
@@ -928,7 +960,21 @@ module Tic_Tac_Toe(
 				else
 					NS = CHECK_OUTCOME;
 			end
-			P2: NS = GET_MOVE_P2;
+			P2: 
+			begin
+				if (AI_en == 1'b1)
+					NS = GET_MOVE_AI;
+				else
+					NS = GET_MOVE_P2;
+			end
+			GET_MOVE_AI: NS = AI_WAIT;
+			AI_WAIT: // added wait state - test
+			begin
+				if (check == 1'b1)
+					NS = CHECK_VALIDITY;
+				else
+					NS = GET_MOVE_AI;
+			end
 			GET_MOVE_P2:
 			begin
 				if (check == 1'b1)
@@ -936,7 +982,37 @@ module Tic_Tac_Toe(
 				else
 					NS = GET_MOVE_P2;
 			end
-			END: NS = END;
+			END: NS = WIN_START;
+			
+			// display winner
+			WIN_START: NS = WIN_CHECK_Y;
+			WIN_CHECK_Y: 
+			begin
+				if (count_y < 240)
+				begin
+					NS = WIN_CHECK_X;
+				end
+				else
+				begin
+					NS = WIN_END;
+				end
+			end
+			WIN_CHECK_X:
+			begin
+				if (count_x < 320)
+				begin
+					NS = WIN_DRAW;
+				end
+				else
+				begin
+					NS = WIN_UPDATE_Y;
+				end
+			end
+			WIN_UPDATE_Y: NS = WIN_CHECK_Y;
+			WIN_UPDATE_X: NS = WIN_CHECK_X;
+			WIN_DRAW: NS = WIN_UPDATE_X;
+			WIN_END: NS = WIN_END;
+			
 			default: NS = ERROR;
 		endcase
 	end
@@ -948,6 +1024,8 @@ module Tic_Tac_Toe(
 			valid <= 1'b0;
 			user <= default_player;
 			outcome <= in_progress;
+			start <= 1'b1;
+			check <= 1'b1;
 		
 			// default colors for board
 			A1_color <= default_color;
@@ -980,10 +1058,11 @@ module Tic_Tac_Toe(
 			
 			p1_move <= 2'd0;
 			p2_move <= 2'd0;
+			move_count <= 4'd0;
 			
 		end
 		else
-		begin
+		begin		
 			case(S)
 				INIT:
 				begin
@@ -1012,6 +1091,7 @@ module Tic_Tac_Toe(
 					//testers
 					p1_test <= 1'b0;
 					p2_test <= 1'b0;
+					AI_test <= 1'b0;
 				end
 				
 				// background
@@ -1248,84 +1328,87 @@ module Tic_Tac_Toe(
 				GET_MOVE_P1:
 				begin
 					p1_move <= move;
+					p2_move <= 9'd0;
 					p1_test <= 1'b1;
+					
 				end
 				CHECK_VALIDITY:
 				begin
 				
 					p1_test <= 1'b0;
 					p2_test <= 1'b0;
+					AI_test <= 1'b0;
 					
 					// A1
-					if ((move == A1) && (grid_A1 == default_player))
+					if ((p1_move == A1 || p2_move == A1) && (grid_A1 == default_player))
 					begin
 						valid <= 1'b1;
 					end
-					else if ((move == A1) && (grid_A1 != default_player))
+					else if ((p1_move == A1 || p2_move == A1) && (grid_A1 != default_player))
 						valid <= 1'b0;
 					
 					// A2
-					if ((move == A2) && (grid_A2 == default_player))
+					if ((p1_move == A2 || p2_move == A2) && (grid_A2 == default_player))
 					begin
 						valid <= 1'b1;
 					end
-					else if ((move == A2) && (grid_A2 != default_player))
+					else if ((p1_move == A2 || p2_move == A2) && (grid_A2 != default_player))
 						valid <= 1'b0;
 						
 					// A3
-					if ((move == A3) && (grid_A3 == default_player))
+					if ((p1_move == A3 || p2_move == A3) && (grid_A3 == default_player))
 					begin
 						valid <= 1'b1;
 					end
-					else if ((move == A3) && (grid_A3 != default_player))
+					else if ((p1_move == A3 || p2_move == A3) && (grid_A3 != default_player))
 						valid <= 1'b0;
 						
 					// B1
-					if ((move == B1) && (grid_B1 == default_player))
+					if ((p1_move == B1 || p2_move == B1) && (grid_B1 == default_player))
 					begin
 						valid <= 1'b1;
 					end
-					else if ((move == B1) && (grid_B2 != default_player))
+					else if ((p1_move == B1 || p2_move == B1) && (grid_B2 != default_player))
 						valid <= 1'b0;
 						
 					// B2
-					if ((move == B2) && (grid_B2 == default_player))
+					if ((p1_move == B2 || p2_move == B2) && (grid_B2 == default_player))
 					begin
 						valid <= 1'b1;
 					end
-					else if ((move == B2) && (grid_B2 != default_player))
+					else if ((p1_move == B2 || p2_move == B2) && (grid_B2 != default_player))
 						valid <= 1'b0;
 						
 					// B3
-					if ((move == B3) && (grid_B3 == default_player))
+					if ((p1_move == B3 || p2_move == B3) && (grid_B3 == default_player))
 					begin
 						valid <= 1'b1;
 					end
-					else if ((move == B3) && (grid_B1 != default_player))
+					else if ((p1_move == B3 || p2_move == B3) && (grid_B1 != default_player))
 						valid <= 1'b0;
 						
 					// C1
-					if ((move == C1) && (grid_C1 == default_player))
+					if ((p1_move == C1 || p2_move == C1) && (grid_C1 == default_player))
 					begin
 						valid <= 1'b1;
 					end
-					else if ((move == C1) && (grid_C1 != default_player))
+					else if ((p1_move == C1 || p2_move == C1) && (grid_C1 != default_player))
 						valid <= 1'b0;
 						
 					// C2
-					if ((move == C2) && (grid_C2 == default_player))
+					if ((p1_move == C2 || p2_move == C2) && (grid_C2 == default_player))
 					begin
 						valid <= 1'b1;
 					end
-					else if ((move == C2) && (grid_C2 != default_player))
+					else if ((p1_move == C2 || p2_move == C2) && (grid_C2 != default_player))
 						valid <= 1'b0;
 						
 					// C3
-					if ((move == C3) && (grid_C3 == default_player))
+					if ((p1_move == C3 || p2_move == C3) && (grid_C3 == default_player))
 					begin
 						valid <= 1'b1;
 					end
-					else if ((move == C3) && (grid_C3 != default_player))
+					else if ((p1_move == C3 || p2_move == C3) && (grid_C3 != default_player))
 						valid <= 1'b0;
 						
 				end
@@ -1339,7 +1422,7 @@ module Tic_Tac_Toe(
 					end
 					
 					// A2
-					if ((p1_move == A2) || (p2_move == A2))
+					if ((p1_move == A2) || (p2_move == A2)) 
 					begin
 						grid_A2 <= user;
 					end
@@ -1390,6 +1473,7 @@ module Tic_Tac_Toe(
 				begin
 					p1_move <= 2'd0;
 					p2_move <= 2'd0;
+					move_count <= move_count + 4'd1;
 					
 					// A1
 					if (grid_A1 == player1)
@@ -1721,9 +1805,6 @@ module Tic_Tac_Toe(
 				CHECK_OUTCOME:
 				begin
 					
-					p1_move <= 9'd0;
-					p2_move <= 9'd0;
-					
 					// Horizontal A row
 					if ((grid_A1 == grid_A2) && (grid_A2 == grid_A3) && (grid_A3 != 2'b00))
 					begin
@@ -1807,15 +1888,52 @@ module Tic_Tac_Toe(
 				begin
 					user <= player2;
 					valid <= 1'b0;
+					
+				end
+				GET_MOVE_AI:
+				begin
+					p2_move <= AI_move;
+					p1_move <= 9'd0;
+					AI_test <= 1'b1;
 				end
 				GET_MOVE_P2:
 				begin
 					p2_move <= move;
+					p1_move <= 9'd0;
 					p2_test <= 1'b1;
 				end
 				END:
 				begin
 				end
+				
+				// display win
+				WIN_START:
+				begin
+					count_x <= 32'd0;
+					count_y <= 32'd0;
+				end
+				WIN_UPDATE_Y:
+				begin
+					count_y <= count_y + 32'd1;
+					count_x <= 32'd0;
+				end
+				WIN_UPDATE_X:
+				begin
+					count_x <= count_x + 32'd1;
+				end
+				WIN_DRAW:
+				begin
+					if (outcome == p1_win)
+						color <= p1_color;
+					else if (outcome == p1_lose)
+						color <= p2_color;
+					else
+						color <= default_color;
+						
+					x <= count_x;
+					y <= count_y;
+				end
+				
 				ERROR:
 				begin
 				end
