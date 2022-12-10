@@ -1,3 +1,7 @@
+# Tic_Tac_Toe
+Check out the [wiki](https://github.com/clairehopfensperger/Tic_Tac_Toe/wiki) for information about the project!
+
+<!--
 <h1 align = "center">ECE287 Final Project</h1>
 
 ## About the project: 
@@ -77,3 +81,4 @@ We would like to make a fully functional single-player (against the â€œcomputerâ
 #### Professor's Commentary:
 "Looks better...now you need to do it. The data for the game could be a single register with {A[1:0], B[1:0], C[1:0], D[1:0] ...} where A == 2'b00 is empty, A == 2'b01 is X and A == 2'b10 is O for the top left corner.  But your register per spot will also work."
 <br>
+-->
